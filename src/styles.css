@@ -222,11 +222,11 @@ body.on-menu .topbar .brand {
 }
 
 .menu-logo {
-  width: min(42vw, 220px);
+  width: min(28vw, 120px);
   height: auto;
   display: block;
-  margin: 0 auto 4px;
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+  margin: 0 auto 2px;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
   animation: logo-float 5.5s ease-in-out infinite alternate;
 }
 
