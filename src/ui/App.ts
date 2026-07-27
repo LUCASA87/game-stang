@@ -64,6 +64,25 @@ export class App {
       $('conn').classList.add('offline');
       $('conn').classList.remove('online');
     });
+    this.net.socket.on('connect_error', () => {
+      $('conn').textContent = 'sem servidor';
+      $('conn').classList.add('offline');
+      $('conn').classList.remove('online');
+    });
+
+    if (this.net.missingServerConfig) {
+      $('conn').textContent = 'configure o servidor';
+      $('conn').classList.add('offline');
+      toast('Edite docs/config.js com a URL do Render e faça novo build/push.');
+    } else if (!this.net.connected) {
+      // dá um tempo; se não conectar, avisa
+      window.setTimeout(() => {
+        if (!this.net.connected) {
+          $('conn').textContent = 'sem servidor';
+          $('conn').classList.add('offline');
+        }
+      }, 4000);
+    }
 
     this.net.on((msg) => {
       if (msg.type !== 'helloOk') return;

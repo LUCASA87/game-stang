@@ -11,26 +11,37 @@ declare global {
 
 export type MsgHandler = (msg: ServerToClient) => void;
 
-function resolveSocketUrl(): string | undefined {
+export function resolveSocketUrl(): string | undefined {
   const fromWindow = typeof window !== 'undefined' ? window.GAME_STANG_SOCKET?.trim() : '';
   if (fromWindow) return fromWindow;
   const fromEnv = import.meta.env.VITE_SOCKET_URL as string | undefined;
   if (fromEnv?.trim()) return fromEnv.trim();
-  // Local: deixa undefined para o Vite fazer proxy de /socket.io
   return undefined;
+}
+
+/** Em GitHub Pages sem config.js preenchido, não há servidor local. */
+export function needsRemoteSocket(): boolean {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host.endsWith('github.io') || host.endsWith('onrender.com');
 }
 
 export class NetClient {
   socket: Socket;
   playerId: string | null = null;
   private handlers = new Set<MsgHandler>();
+  readonly socketUrl: string | undefined;
 
   constructor() {
-    const url = resolveSocketUrl();
-    this.socket = io(url, {
+    this.socketUrl = resolveSocketUrl();
+    const skip =
+      needsRemoteSocket() && !this.socketUrl;
+
+    this.socket = io(this.socketUrl, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
-      autoConnect: true,
+      autoConnect: !skip,
+      reconnection: !skip,
     });
 
     this.socket.on('connect', () => {
@@ -45,6 +56,10 @@ export class NetClient {
       }
       for (const h of this.handlers) h(msg);
     });
+  }
+
+  get missingServerConfig(): boolean {
+    return needsRemoteSocket() && !this.socketUrl;
   }
 
   on(handler: MsgHandler): () => void {

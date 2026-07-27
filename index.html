@@ -15,6 +15,13 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/styles.css" />
+    <style>
+      /* Fallback se o CSS demorar: só o menu ativo aparece */
+      .screen { display: none !important; }
+      .screen.active { display: flex !important; flex-direction: column; gap: 14px; }
+      .hidden { display: none !important; }
+      .forms.hidden, .form.hidden { display: none !important; }
+    </style>
   </head>
   <body>
     <div id="app">
