@@ -29,10 +29,16 @@
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body {
         width: 100%; height: 100%;
-        background: radial-gradient(1200px 800px at 50% -10%, #2d6b45, var(--bg0));
+        background: #0a1a12;
         color: var(--ink); font-family: var(--font);
       }
+      .bg-3d { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+      .bg-3d-wash {
+        position: absolute; inset: 0;
+        background: linear-gradient(165deg, #1c5236 0%, #0f2a1c 42%, #07140e 100%);
+      }
       #app {
+        position: relative; z-index: 1;
         max-width: 960px; margin: 0 auto; padding: 12px 16px 20px;
         min-height: 100dvh; display: flex; flex-direction: column;
       }
@@ -42,21 +48,28 @@
       .conn.online { color: #8dffb5; }
       .screen { display: none !important; flex-direction: column; gap: 14px; }
       .screen.active { display: flex !important; }
+      #screen-menu { align-items: center; text-align: center; justify-content: center; }
+      #screen-menu .lead { margin-left: auto; margin-right: auto; }
+      #screen-menu .nick-field { margin-left: auto; margin-right: auto; text-align: left; }
+      #screen-menu .actions { margin-left: auto; margin-right: auto; }
+      #screen-menu .btn { text-align: center; }
       .hidden { display: none !important; }
       [hidden] { display: none !important; }
       h1 { font-family: var(--display); font-weight: 800; font-size: clamp(1.6rem, 5vw, 2.2rem); }
       .lead { color: var(--muted); max-width: 36ch; margin: 6px 0 12px; }
       .field { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 0.9rem; margin-bottom: 10px; }
+      .nick-field { max-width: 160px; width: 160px; margin-bottom: 8px; }
+      .nick-field input { padding: 8px 10px; font-size: 0.95rem; border-radius: 10px; width: 100%; }
       input, select {
         font: inherit; padding: 12px 14px; border-radius: 12px;
         border: 1px solid rgba(255,255,255,0.12); background: var(--card); color: var(--ink);
       }
-      .actions { display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
+      .actions { display: flex; flex-direction: column; gap: 10px; max-width: 320px; width: 100%; }
       .actions.row { flex-direction: row; flex-wrap: wrap; max-width: none; }
       .btn {
         font: inherit; font-weight: 600; padding: 12px 16px; border-radius: 12px;
         border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.08);
-        color: var(--ink); cursor: pointer; text-align: left;
+        color: var(--ink); cursor: pointer; text-align: center;
       }
       .btn.primary { background: var(--primary); border-color: transparent; color: #062214; }
       .btn.accent { background: var(--accent); border-color: transparent; color: #2a1c00; }
@@ -94,9 +107,92 @@
         position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
         background: #111; color: #fff; padding: 10px 16px; border-radius: 10px; z-index: 50;
       }
+      .game-modal {
+        position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center;
+        padding: 20px; background: rgba(4,16,10,0.72);
+      }
+      .game-modal[hidden] { display: none !important; }
+      .game-modal-card {
+        width: min(360px, 100%); background: #143524; border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 16px; padding: 18px 16px;
+      }
+      .game-modal-title { font-size: 1.15rem; margin-bottom: 8px; }
+      .game-modal-text { color: #a8c4b4; margin-bottom: 16px; }
     </style>
   </head>
-  <body>
+  <body class="on-menu">
+    <div class="bg-3d" aria-hidden="true">
+      <div class="bg-3d-wash"></div>
+      <div class="bg-3d-orbs">
+        <span class="orb o1"></span>
+        <span class="orb o2"></span>
+        <span class="orb o3"></span>
+      </div>
+      <div class="bg-3d-stage">
+        <div class="bg-3d-floor"></div>
+        <div class="bg-3d-board">
+          <svg class="bg-board-svg" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="dot3d" cx="35%" cy="30%" r="65%">
+                <stop offset="0%" stop-color="#f3fff6"/>
+                <stop offset="55%" stop-color="#c8e6cb"/>
+                <stop offset="100%" stop-color="#5a8f6a"/>
+              </radialGradient>
+              <linearGradient id="line3d" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#8fd9a8"/>
+                <stop offset="100%" stop-color="#2f6b45"/>
+              </linearGradient>
+              <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="3" result="b"/>
+                <feMerge>
+                  <feMergeNode in="b"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <!-- caixas preenchidas (profundidade) -->
+            <rect class="box-fill f1" x="70" y="70" width="70" height="70" rx="6" fill="#2bb673" opacity="0.55"/>
+            <rect class="box-fill f2" x="210" y="140" width="70" height="70" rx="6" fill="#e8b84a" opacity="0.5"/>
+            <rect class="box-fill f3" x="140" y="280" width="70" height="70" rx="6" fill="#1e88e5" opacity="0.45"/>
+            <rect class="box-fill f4" x="280" y="210" width="70" height="70" rx="6" fill="#fb8c00" opacity="0.4"/>
+            <!-- linhas da grade -->
+            <g stroke="url(#line3d)" stroke-width="5" stroke-linecap="round" opacity="0.72">
+              <path d="M70 70h280M70 140h280M70 210h280M70 280h280M70 350h280"/>
+              <path d="M70 70v280M140 70v280M210 70v280M280 70v280M350 70v280"/>
+            </g>
+            <!-- pontos 3D -->
+            <g filter="url(#softGlow)">
+              <circle cx="70" cy="70" r="9" fill="url(#dot3d)"/>
+              <circle cx="140" cy="70" r="9" fill="url(#dot3d)"/>
+              <circle cx="210" cy="70" r="9" fill="url(#dot3d)"/>
+              <circle cx="280" cy="70" r="9" fill="url(#dot3d)"/>
+              <circle cx="350" cy="70" r="9" fill="url(#dot3d)"/>
+              <circle cx="70" cy="140" r="9" fill="url(#dot3d)"/>
+              <circle cx="140" cy="140" r="9" fill="url(#dot3d)"/>
+              <circle cx="210" cy="140" r="9" fill="url(#dot3d)"/>
+              <circle cx="280" cy="140" r="9" fill="url(#dot3d)"/>
+              <circle cx="350" cy="140" r="9" fill="url(#dot3d)"/>
+              <circle cx="70" cy="210" r="9" fill="url(#dot3d)"/>
+              <circle cx="140" cy="210" r="9" fill="url(#dot3d)"/>
+              <circle cx="210" cy="210" r="9" fill="url(#dot3d)"/>
+              <circle cx="280" cy="210" r="9" fill="url(#dot3d)"/>
+              <circle cx="350" cy="210" r="9" fill="url(#dot3d)"/>
+              <circle cx="70" cy="280" r="9" fill="url(#dot3d)"/>
+              <circle cx="140" cy="280" r="9" fill="url(#dot3d)"/>
+              <circle cx="210" cy="280" r="9" fill="url(#dot3d)"/>
+              <circle cx="280" cy="280" r="9" fill="url(#dot3d)"/>
+              <circle cx="350" cy="280" r="9" fill="url(#dot3d)"/>
+              <circle cx="70" cy="350" r="9" fill="url(#dot3d)"/>
+              <circle cx="140" cy="350" r="9" fill="url(#dot3d)"/>
+              <circle cx="210" cy="350" r="9" fill="url(#dot3d)"/>
+              <circle cx="280" cy="350" r="9" fill="url(#dot3d)"/>
+              <circle cx="350" cy="350" r="9" fill="url(#dot3d)"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+
     <div id="app">
       <header class="topbar">
         <div class="brand">Game Stang</div>
@@ -107,7 +203,7 @@
         <section id="screen-menu" class="screen active">
           <h1>Pontos e Caixas</h1>
           <p class="lead">Jogue com amigos à distância e organize campeonatos.</p>
-          <label class="field">
+          <label class="field nick-field">
             Seu apelido
             <input id="nickname" type="text" maxlength="20" placeholder="Ex: Ana" autocomplete="nickname" />
           </label>
@@ -157,7 +253,7 @@
           <button type="button" id="copy-room-link" class="btn small">Copiar link</button>
           <ul id="room-players" class="list"></ul>
           <div class="field lobby-color" id="room-profile">
-            <label class="field">
+            <label class="field nick-field">
               Seu nome na sala
               <input id="room-nickname" type="text" maxlength="20" placeholder="Ex: Ana" />
             </label>
@@ -179,7 +275,7 @@
           <button type="button" id="copy-tourney-link" class="btn small">Copiar link</button>
           <ul id="tourney-players" class="list"></ul>
           <div id="tourney-color-wrap" class="field lobby-color">
-            <label class="field">
+            <label class="field nick-field">
               Seu nome no campeonato
               <input id="tourney-nickname" type="text" maxlength="20" placeholder="Ex: Ana" />
             </label>
@@ -218,6 +314,16 @@
       </main>
 
       <div id="toast" class="toast" hidden></div>
+      <div id="game-modal" class="game-modal" hidden>
+        <div class="game-modal-card" role="dialog" aria-modal="true" aria-labelledby="game-modal-title">
+          <p id="game-modal-title" class="game-modal-title"></p>
+          <p id="game-modal-text" class="game-modal-text"></p>
+          <div class="actions row game-modal-actions">
+            <button type="button" id="game-modal-cancel" class="btn ghost">Cancelar</button>
+            <button type="button" id="game-modal-ok" class="btn danger">Confirmar</button>
+          </div>
+        </div>
+      </div>
     </div>
     <script>
       // Servidor Render (também em public/config.js)

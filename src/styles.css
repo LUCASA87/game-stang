@@ -24,7 +24,7 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: radial-gradient(1200px 800px at 50% -10%, #2d6b45, var(--bg0));
+  background: #0a1a12;
   color: var(--ink);
   font-family: var(--font);
   touch-action: manipulation;
@@ -32,7 +32,165 @@ body {
   user-select: none;
 }
 
+/* —— Fundo 3D (menu) —— */
+.bg-3d {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.28;
+  transition: opacity 0.45s ease;
+}
+body.on-menu .bg-3d {
+  opacity: 1;
+}
+
+.bg-3d-wash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 60% at 75% 15%, rgba(56, 140, 90, 0.45), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 15% 85%, rgba(8, 30, 18, 0.9), transparent 50%),
+    linear-gradient(165deg, #1c5236 0%, #0f2a1c 42%, #07140e 100%);
+}
+
+.bg-3d-orbs .orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+  opacity: 0.55;
+  animation: orb-float 10s ease-in-out infinite alternate;
+}
+.bg-3d-orbs .o1 {
+  width: 120px;
+  height: 120px;
+  left: 62%;
+  top: 16%;
+  background: radial-gradient(circle at 30% 30%, #e8f5e9, #2bb67388 45%, transparent 70%);
+  animation-duration: 11s;
+}
+.bg-3d-orbs .o2 {
+  width: 80px;
+  height: 80px;
+  left: 28%;
+  bottom: 18%;
+  background: radial-gradient(circle at 30% 30%, #fff8e1, #e8b84a88 45%, transparent 70%);
+  animation-duration: 13s;
+  animation-delay: -3s;
+}
+.bg-3d-orbs .o3 {
+  width: 64px;
+  height: 64px;
+  left: 18%;
+  top: 38%;
+  background: radial-gradient(circle at 30% 30%, #e3f2fd, #1e88e588 45%, transparent 70%);
+  animation-duration: 9s;
+  animation-delay: -5s;
+}
+
+.bg-3d-stage {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: min(92vw, 780px);
+  height: min(78vh, 620px);
+  transform: translate(-50%, -50%);
+  perspective: 1100px;
+  perspective-origin: 50% 40%;
+}
+
+.bg-3d-floor {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 6%;
+  height: 42%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45), transparent 70%);
+  transform: rotateX(70deg);
+  filter: blur(8px);
+}
+
+.bg-3d-board {
+  position: absolute;
+  inset: 8% 10% 12%;
+  transform-style: preserve-3d;
+  transform: rotateX(58deg) rotateZ(-12deg) translateZ(20px);
+  animation: board-drift 16s ease-in-out infinite alternate;
+  filter: drop-shadow(0 28px 40px rgba(0, 0, 0, 0.55));
+}
+
+.bg-board-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.bg-board-svg .box-fill {
+  transform-origin: center;
+  animation: box-pulse 5.5s ease-in-out infinite;
+}
+.bg-board-svg .f2 {
+  animation-delay: -1.4s;
+}
+.bg-board-svg .f3 {
+  animation-delay: -2.8s;
+}
+.bg-board-svg .f4 {
+  animation-delay: -4s;
+}
+
+@keyframes board-drift {
+  from {
+    transform: rotateX(56deg) rotateZ(-14deg) translate3d(-8px, 6px, 10px);
+  }
+  to {
+    transform: rotateX(60deg) rotateZ(-8deg) translate3d(8px, -4px, 24px);
+  }
+}
+
+@keyframes orb-float {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(18px, -22px, 0) scale(1.08);
+  }
+}
+
+@keyframes box-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-3d-board,
+  .bg-3d-orbs .orb,
+  .bg-board-svg .box-fill {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .bg-3d-stage {
+    width: min(110vw, 520px);
+    height: 52vh;
+    top: 58%;
+    opacity: 0.85;
+  }
+  .bg-3d-orbs .o3 {
+    display: none;
+  }
+}
+
 #app {
+  position: relative;
+  z-index: 1;
   height: 100%;
   height: 100dvh;
   display: flex;
@@ -80,6 +238,40 @@ body {
 }
 .screen.active {
   display: flex;
+}
+
+#screen-menu {
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  gap: 12px;
+}
+#screen-menu h1 {
+  max-width: 16ch;
+}
+#screen-menu .lead {
+  margin-left: auto;
+  margin-right: auto;
+}
+#screen-menu .nick-field {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}
+#screen-menu .actions:not(.row) {
+  width: min(100%, 320px);
+  margin-left: auto;
+  margin-right: auto;
+}
+#screen-menu .btn {
+  text-align: center;
+}
+#screen-menu .forms,
+#screen-menu .form {
+  width: min(100%, 320px);
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
 }
 
 h1,
@@ -137,6 +329,18 @@ select {
 input:focus,
 select:focus {
   border-color: var(--primary);
+}
+
+.nick-field {
+  max-width: 160px;
+  width: 160px;
+  margin-bottom: 8px;
+}
+.nick-field input {
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  width: 100%;
 }
 
 .actions {
@@ -332,6 +536,44 @@ select:focus {
   border-radius: 10px;
   z-index: 50;
   max-width: 90vw;
+}
+
+.game-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(4, 16, 10, 0.72);
+  backdrop-filter: blur(4px);
+}
+.game-modal[hidden] {
+  display: none !important;
+}
+.game-modal-card {
+  width: min(360px, 100%);
+  background: linear-gradient(160deg, #1d4a32, #0f2418);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 18px 16px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+.game-modal-title {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+.game-modal-text {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+.game-modal-actions {
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .color-picker {

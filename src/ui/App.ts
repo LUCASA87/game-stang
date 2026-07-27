@@ -25,6 +25,7 @@ function showScreen(id: string): void {
     el.classList.toggle('active', on);
     el.hidden = !on;
   });
+  document.body.classList.toggle('on-menu', id === 'screen-menu');
 }
 
 function toast(msg: string): void {
@@ -34,6 +35,35 @@ function toast(msg: string): void {
   window.setTimeout(() => {
     el.hidden = true;
   }, 3200);
+}
+
+/** Confirmação dentro do jogo (sem alert/confirm do navegador). */
+function askConfirm(title: string, text: string, okLabel = 'Confirmar'): Promise<boolean> {
+  const modal = $('game-modal');
+  const titleEl = $('game-modal-title');
+  const textEl = $('game-modal-text');
+  const okBtn = $('game-modal-ok') as HTMLButtonElement;
+  const cancelBtn = $('game-modal-cancel') as HTMLButtonElement;
+
+  titleEl.textContent = title;
+  textEl.textContent = text;
+  okBtn.textContent = okLabel;
+  modal.hidden = false;
+
+  return new Promise((resolve) => {
+    const finish = (value: boolean) => {
+      modal.hidden = true;
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      modal.onclick = null;
+      resolve(value);
+    };
+    okBtn.onclick = () => finish(true);
+    cancelBtn.onclick = () => finish(false);
+    modal.onclick = (e) => {
+      if (e.target === modal) finish(false);
+    };
+  });
 }
 
 function nickname(): string {
@@ -188,13 +218,15 @@ export class App {
     };
   }
 
-  private abandonMatch(): void {
+  private async abandonMatch(): Promise<void> {
     if (!this.match || this.match.status !== 'playing') {
       this.leaveAll();
       return;
     }
-    const ok = window.confirm(
-      'Abandonar a partida? O adversário vence e você sai da sala.',
+    const ok = await askConfirm(
+      'Abandonar partida?',
+      'O adversário vence e você sai da sala.',
+      'Abandonar',
     );
     if (!ok) return;
     this.leaveAll();
