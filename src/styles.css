@@ -222,10 +222,12 @@ body.on-menu .topbar .brand {
 }
 
 .menu-logo {
-  width: min(18vw, 72px);
+  width: 64px;
+  max-width: 64px;
   height: auto;
   display: block;
   margin: 0 auto 2px;
+  object-fit: contain;
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
   animation: logo-float 5.5s ease-in-out infinite alternate;
 }
@@ -314,6 +316,12 @@ body.on-menu .topbar .brand {
 #screen-menu > * {
   width: auto;
   max-width: 100%;
+}
+#screen-menu .menu-logo {
+  width: 64px !important;
+  max-width: 64px !important;
+  height: auto !important;
+  flex: 0 0 auto;
 }
 #screen-menu h1 {
   max-width: 16ch;
