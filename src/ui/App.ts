@@ -20,15 +20,20 @@ function $(id: string): HTMLElement {
 }
 
 function showScreen(id: string): void {
-  document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
-  $(id).classList.add('active');
+  document.querySelectorAll<HTMLElement>('.screen').forEach((el) => {
+    const on = el.id === id;
+    el.classList.toggle('active', on);
+    el.hidden = !on;
+  });
 }
 
 function toast(msg: string): void {
   const el = $('toast');
   el.textContent = msg;
-  el.classList.remove('hidden');
-  window.setTimeout(() => el.classList.add('hidden'), 2800);
+  el.hidden = false;
+  window.setTimeout(() => {
+    el.hidden = true;
+  }, 3200);
 }
 
 function nickname(): string {
@@ -51,6 +56,7 @@ export class App {
     const savedNick = localStorage.getItem('game_stang_nick');
     if (savedNick) ($('nickname') as HTMLInputElement).value = savedNick;
 
+    showScreen('screen-menu');
     this.bindUi();
     this.net.on((msg) => this.onMsg(msg));
 
@@ -164,7 +170,7 @@ export class App {
     const me = players.find((p) => p.id === this.net.playerId);
     const taken = this.takenColors(players);
     box.innerHTML = '';
-    box.parentElement?.classList.toggle('hidden', !inLobby);
+    box.parentElement?.toggleAttribute('hidden', !inLobby);
 
     for (const c of PLAYER_COLORS) {
       const btn = document.createElement('button');
@@ -185,9 +191,10 @@ export class App {
   }
 
   private toggleForm(id: string): void {
-    $('menu-forms').classList.remove('hidden');
+    const forms = $('menu-forms');
+    forms.hidden = false;
     ['form-create-room', 'form-join-room', 'form-create-tourney', 'form-join-tourney'].forEach((fid) => {
-      $(fid).classList.toggle('hidden', fid !== id);
+      $(fid).hidden = fid !== id;
     });
   }
 
@@ -338,7 +345,7 @@ export class App {
       t.players.length === t.size &&
       allColored
     );
-    ($('btn-start-tourney') as HTMLButtonElement).classList.toggle('hidden', t.status !== 'lobby');
+    ($('btn-start-tourney') as HTMLButtonElement).hidden = t.status !== 'lobby';
 
     if (t.status === 'lobby') {
       const me = t.players.find((p) => p.id === this.net.playerId);
@@ -417,7 +424,7 @@ export class App {
     });
 
     const ended = this.match.status === 'finished';
-    $('match-end').classList.toggle('hidden', !ended);
+    $('match-end').hidden = !ended;
     if (ended) {
       const w = this.match.winnerId;
       const me = this.net.playerId;
@@ -429,8 +436,8 @@ export class App {
         text = inTourney ? `Eliminado por ${name}` : `${name} venceu`;
       }
       $('match-end-text').textContent = text;
-      $('btn-rematch').classList.toggle('hidden', inTourney);
-      $('btn-back-bracket').classList.toggle('hidden', !inTourney);
+      $('btn-rematch').hidden = inTourney;
+      $('btn-back-bracket').hidden = !inTourney;
     }
   }
 

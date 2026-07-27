@@ -15,13 +15,86 @@
       rel="stylesheet"
     />
     <style>
-      /* Fallback se o CSS demorar: só o menu ativo aparece */
-      .screen { display: none !important; }
-      .screen.active { display: flex !important; flex-direction: column; gap: 14px; }
+      :root {
+        --bg0: #0f2a1c;
+        --ink: #f4f7f5;
+        --muted: #a8c4b4;
+        --accent: #e8b84a;
+        --primary: #2bb673;
+        --card: rgba(8, 28, 18, 0.72);
+        --font: 'Outfit', system-ui, sans-serif;
+        --display: 'Montserrat', system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        width: 100%; height: 100%;
+        background: radial-gradient(1200px 800px at 50% -10%, #2d6b45, var(--bg0));
+        color: var(--ink); font-family: var(--font);
+      }
+      #app {
+        max-width: 960px; margin: 0 auto; padding: 12px 16px 20px;
+        min-height: 100dvh; display: flex; flex-direction: column;
+      }
+      .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+      .brand { font-family: var(--display); font-weight: 800; color: var(--accent); }
+      .conn { font-size: 0.75rem; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.08); color: #ffb4b4; }
+      .conn.online { color: #8dffb5; }
+      .screen { display: none !important; flex-direction: column; gap: 14px; }
+      .screen.active { display: flex !important; }
       .hidden { display: none !important; }
-      .forms.hidden, .form.hidden { display: none !important; }
+      [hidden] { display: none !important; }
+      h1 { font-family: var(--display); font-weight: 800; font-size: clamp(1.6rem, 5vw, 2.2rem); }
+      .lead { color: var(--muted); max-width: 36ch; margin: 6px 0 12px; }
+      .field { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 0.9rem; margin-bottom: 10px; }
+      input, select {
+        font: inherit; padding: 12px 14px; border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.12); background: var(--card); color: var(--ink);
+      }
+      .actions { display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
+      .actions.row { flex-direction: row; flex-wrap: wrap; max-width: none; }
+      .btn {
+        font: inherit; font-weight: 600; padding: 12px 16px; border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.08);
+        color: var(--ink); cursor: pointer; text-align: left;
+      }
+      .btn.primary { background: var(--primary); border-color: transparent; color: #062214; }
+      .btn.accent { background: var(--accent); border-color: transparent; color: #2a1c00; }
+      .btn.ghost { background: transparent; }
+      .btn.small { align-self: flex-start; padding: 8px 12px; font-size: 0.85rem; }
+      .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .forms, .form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+      .code { letter-spacing: 0.18em; color: var(--accent); font-family: var(--display); }
+      .hint { color: var(--muted); font-size: 0.9rem; }
+      .list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+      .list li {
+        background: var(--card); border-radius: 12px; padding: 10px 14px;
+        display: flex; justify-content: space-between; border: 1px solid rgba(255,255,255,0.08);
+      }
+      .color-picker { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+      .color-swatch {
+        width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent;
+        cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      }
+      .color-swatch.selected { border-color: #fff; outline: 2px solid var(--accent); outline-offset: 2px; }
+      .color-swatch:disabled, .color-swatch.taken { opacity: 0.28; cursor: not-allowed; }
+      .lobby-color {
+        background: var(--card); border-radius: 12px; padding: 12px;
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+      .scoreboard { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; }
+      .score { background: var(--card); border-radius: 12px; padding: 10px 12px; font-weight: 600; }
+      .turn { font-size: 0.85rem; color: var(--accent); text-align: center; }
+      #game-container {
+        flex: 1; min-height: 280px; display: flex; align-items: center; justify-content: center;
+        border-radius: 16px; overflow: hidden; background: rgba(0,0,0,0.2);
+      }
+      .match-end { background: var(--card); border-radius: 14px; padding: 14px; text-align: center; }
+      .toast {
+        position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+        background: #111; color: #fff; padding: 10px 16px; border-radius: 10px; z-index: 50;
+      }
     </style>
-    <script type="module" crossorigin src="./assets/index-BtkvWh4Q.js"></script>
+    <script type="module" crossorigin src="./assets/index-DFGJgOnw.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-DybuOU9R.css">
   </head>
   <body>
@@ -32,34 +105,33 @@
       </header>
 
       <main id="screens">
-        <!-- MENU -->
         <section id="screen-menu" class="screen active">
           <h1>Pontos e Caixas</h1>
           <p class="lead">Jogue com amigos à distância e organize campeonatos.</p>
           <label class="field">
             Seu apelido
-            <input id="nickname" type="text" maxlength="20" placeholder="Ex: Ana" />
+            <input id="nickname" type="text" maxlength="20" placeholder="Ex: Ana" autocomplete="nickname" />
           </label>
           <div class="actions">
-            <button id="btn-create-room" class="btn primary">Criar partida 1v1</button>
-            <button id="btn-join-room" class="btn">Entrar com código</button>
-            <button id="btn-create-tourney" class="btn accent">Criar campeonato</button>
-            <button id="btn-join-tourney" class="btn">Entrar no campeonato</button>
+            <button type="button" id="btn-create-room" class="btn primary">Criar partida 1v1</button>
+            <button type="button" id="btn-join-room" class="btn">Entrar com código</button>
+            <button type="button" id="btn-create-tourney" class="btn accent">Criar campeonato</button>
+            <button type="button" id="btn-join-tourney" class="btn">Entrar no campeonato</button>
           </div>
-          <div id="menu-forms" class="forms hidden">
-            <div id="form-create-room" class="form hidden">
+          <div id="menu-forms" class="forms" hidden>
+            <div id="form-create-room" class="form" hidden>
               <select id="room-boxes">
                 <option value="4">Grade 4×4</option>
                 <option value="5" selected>Grade 5×5</option>
                 <option value="6">Grade 6×6</option>
               </select>
-              <button id="confirm-create-room" class="btn primary">Criar sala</button>
+              <button type="button" id="confirm-create-room" class="btn primary">Criar sala</button>
             </div>
-            <div id="form-join-room" class="form hidden">
+            <div id="form-join-room" class="form" hidden>
               <input id="join-room-code" type="text" maxlength="6" placeholder="Código da sala" />
-              <button id="confirm-join-room" class="btn primary">Entrar</button>
+              <button type="button" id="confirm-join-room" class="btn primary">Entrar</button>
             </div>
-            <div id="form-create-tourney" class="form hidden">
+            <div id="form-create-tourney" class="form" hidden>
               <input id="tourney-name" type="text" maxlength="40" placeholder="Nome do campeonato" />
               <select id="tourney-size">
                 <option value="2">2 jogadores</option>
@@ -72,39 +144,37 @@
                 <option value="5" selected>Grade 5×5</option>
                 <option value="6">Grade 6×6</option>
               </select>
-              <button id="confirm-create-tourney" class="btn accent">Criar</button>
+              <button type="button" id="confirm-create-tourney" class="btn accent">Criar</button>
             </div>
-            <div id="form-join-tourney" class="form hidden">
+            <div id="form-join-tourney" class="form" hidden>
               <input id="join-tourney-code" type="text" maxlength="6" placeholder="Código do campeonato" />
-              <button id="confirm-join-tourney" class="btn primary">Entrar</button>
+              <button type="button" id="confirm-join-tourney" class="btn primary">Entrar</button>
             </div>
           </div>
         </section>
 
-        <!-- ROOM LOBBY -->
-        <section id="screen-room" class="screen">
+        <section id="screen-room" class="screen" hidden>
           <h2>Sala <span id="room-code" class="code"></span></h2>
-          <button id="copy-room-link" class="btn small">Copiar link</button>
+          <button type="button" id="copy-room-link" class="btn small">Copiar link</button>
           <ul id="room-players" class="list"></ul>
           <div class="field lobby-color">
             <span>Escolha sua cor na sala</span>
             <div id="room-color-picker" class="color-picker"></div>
-            <p id="room-color-hint" class="hint">Cores já usadas ficam bloqueadas.</p>
+            <p class="hint">Cores já usadas ficam bloqueadas.</p>
           </div>
           <p id="room-hint" class="hint"></p>
           <div class="actions row">
-            <button id="btn-start-room" class="btn primary">Iniciar</button>
-            <button id="btn-leave-room" class="btn ghost">Sair</button>
+            <button type="button" id="btn-start-room" class="btn primary">Iniciar</button>
+            <button type="button" id="btn-leave-room" class="btn ghost">Sair</button>
           </div>
         </section>
 
-        <!-- TOURNAMENT LOBBY / BRACKET -->
-        <section id="screen-tourney" class="screen">
+        <section id="screen-tourney" class="screen" hidden>
           <h2 id="tourney-title">Campeonato</h2>
           <p>Código: <span id="tourney-code" class="code"></span></p>
-          <button id="copy-tourney-link" class="btn small">Copiar link</button>
+          <button type="button" id="copy-tourney-link" class="btn small">Copiar link</button>
           <ul id="tourney-players" class="list"></ul>
-          <div class="field lobby-color">
+          <div id="tourney-color-wrap" class="field lobby-color">
             <span>Escolha sua cor no campeonato</span>
             <div id="tourney-color-picker" class="color-picker"></div>
             <p class="hint">Cores já usadas ficam bloqueadas.</p>
@@ -112,31 +182,30 @@
           <div id="bracket" class="bracket"></div>
           <p id="tourney-hint" class="hint"></p>
           <div class="actions row">
-            <button id="btn-start-tourney" class="btn accent">Iniciar campeonato</button>
-            <button id="btn-leave-tourney" class="btn ghost">Sair</button>
+            <button type="button" id="btn-start-tourney" class="btn accent">Iniciar campeonato</button>
+            <button type="button" id="btn-leave-tourney" class="btn ghost">Sair</button>
           </div>
         </section>
 
-        <!-- MATCH -->
-        <section id="screen-match" class="screen">
+        <section id="screen-match" class="screen" hidden>
           <div class="scoreboard">
             <div id="score-p0" class="score">—</div>
             <div id="turn-label" class="turn">…</div>
             <div id="score-p1" class="score">—</div>
           </div>
           <div id="game-container"></div>
-          <div id="match-end" class="match-end hidden">
+          <div id="match-end" class="match-end" hidden>
             <p id="match-end-text"></p>
             <div class="actions row">
-              <button id="btn-rematch" class="btn primary">Revancha</button>
-              <button id="btn-back-bracket" class="btn accent hidden">Ver chave</button>
-              <button id="btn-leave-match" class="btn ghost">Sair</button>
+              <button type="button" id="btn-rematch" class="btn primary">Revancha</button>
+              <button type="button" id="btn-back-bracket" class="btn accent" hidden>Ver chave</button>
+              <button type="button" id="btn-leave-match" class="btn ghost">Sair</button>
             </div>
           </div>
         </section>
       </main>
 
-      <div id="toast" class="toast hidden"></div>
+      <div id="toast" class="toast" hidden></div>
     </div>
     <script src="./config.js"></script>
   </body>
