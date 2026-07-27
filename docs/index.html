@@ -47,9 +47,9 @@
       .menu-logo { width: min(42vw, 220px); height: auto; display: block; margin: 0 auto 4px; }
       .conn { font-size: 0.75rem; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.08); color: #ffb4b4; }
       .conn.online { color: #8dffb5; }
-      .screen { display: none !important; flex-direction: column; gap: 14px; }
+      .screen { display: none !important; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
       .screen.active { display: flex !important; }
-      #screen-menu { align-items: center; text-align: center; justify-content: center; }
+      #screen-menu { justify-content: center; }
       #screen-menu .lead { margin-left: auto; margin-right: auto; }
       #screen-menu .nick-field { margin-left: auto; margin-right: auto; text-align: left; }
       #screen-menu .actions { margin-left: auto; margin-right: auto; }
@@ -65,17 +65,31 @@
         font: inherit; padding: 12px 14px; border-radius: 12px;
         border: 1px solid rgba(255,255,255,0.12); background: var(--card); color: var(--ink);
       }
-      .actions { display: flex; flex-direction: column; gap: 10px; max-width: 320px; width: 100%; }
-      .actions.row { flex-direction: row; flex-wrap: wrap; max-width: none; }
+      .actions { display: flex; flex-direction: column; gap: 12px; max-width: 320px; width: 100%; }
+      .actions.row { flex-direction: row; flex-wrap: wrap; max-width: none; justify-content: center; }
       .btn {
-        font: inherit; font-weight: 600; padding: 12px 16px; border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.08);
+        font: inherit; font-weight: 700; padding: 13px 18px; border-radius: 14px; border: none;
         color: var(--ink); cursor: pointer; text-align: center;
+        background: linear-gradient(180deg, #3d6b52, #1e3a2c);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset, 0 8px 0 #12261b, 0 12px 18px rgba(0,0,0,0.35);
       }
-      .btn.primary { background: var(--primary); border-color: transparent; color: #062214; }
-      .btn.accent { background: var(--accent); border-color: transparent; color: #2a1c00; }
-      .btn.ghost { background: transparent; }
-      .btn.small { align-self: flex-start; padding: 8px 12px; font-size: 0.85rem; }
+      .btn.primary {
+        background: linear-gradient(180deg, #4adf95, #1f8f59); color: #062214;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 8px 0 #146b42, 0 12px 18px rgba(0,0,0,0.35);
+      }
+      .btn.accent {
+        background: linear-gradient(180deg, #f3d06a, #c99428); color: #2a1c00;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 8px 0 #8a6a18, 0 12px 18px rgba(0,0,0,0.35);
+      }
+      .btn.ghost {
+        background: linear-gradient(180deg, #4a6f5c, #263d33); color: #eef7f1;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset, 0 8px 0 #152820, 0 12px 18px rgba(0,0,0,0.35);
+      }
+      .btn.danger {
+        background: linear-gradient(180deg, #f07878, #c94444); color: #2a0a0a;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.28) inset, 0 8px 0 #8a2a2a, 0 12px 18px rgba(0,0,0,0.35);
+      }
+      .btn.small { align-self: center; padding: 9px 14px; font-size: 0.85rem; }
       .btn:disabled { opacity: 0.45; cursor: not-allowed; }
       .forms, .form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
       .code { letter-spacing: 0.18em; color: var(--accent); font-family: var(--display); }
@@ -120,8 +134,8 @@
       .game-modal-title { font-size: 1.15rem; margin-bottom: 8px; }
       .game-modal-text { color: #a8c4b4; margin-bottom: 16px; }
     </style>
-    <script type="module" crossorigin src="./assets/index-C5suacv4.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CB9WumKT.css">
+    <script type="module" crossorigin src="./assets/index-BNOZFXxV.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CfXmQ9vI.css">
   </head>
   <body class="on-menu">
     <div class="bg-3d" aria-hidden="true">

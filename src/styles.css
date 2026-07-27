@@ -265,16 +265,55 @@ body.on-menu .topbar .brand {
   gap: 14px;
   overflow: auto;
   padding-bottom: 8px;
+  align-items: center;
+  text-align: center;
+  width: 100%;
 }
 .screen.active {
   display: flex;
 }
+.screen > * {
+  width: min(100%, 420px);
+}
+.screen > .scoreboard,
+.screen > #game-container,
+.screen > .bracket,
+.screen > .list,
+.screen > .lobby-color,
+.screen > #room-profile,
+.screen > #tourney-color-wrap,
+.screen > .match-end,
+.screen > .match-playing-actions {
+  width: min(100%, 560px);
+}
+.screen .actions.row {
+  justify-content: center;
+}
+.screen .hint,
+.screen h2,
+.screen > p {
+  margin-left: auto;
+  margin-right: auto;
+}
+.screen .list {
+  text-align: left;
+}
+.screen .lobby-color,
+.screen #room-profile,
+.screen #tourney-color-wrap {
+  text-align: left;
+}
+.screen .btn.small {
+  align-self: center;
+}
 
 #screen-menu {
-  align-items: center;
-  text-align: center;
   justify-content: center;
   gap: 10px;
+}
+#screen-menu > * {
+  width: auto;
+  max-width: 100%;
 }
 #screen-menu h1 {
   max-width: 16ch;
@@ -379,56 +418,148 @@ select:focus {
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin-top: 6px;
 }
 .actions.row {
   flex-direction: row;
   flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
 }
 
 .btn {
   font: inherit;
-  font-weight: 600;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+  padding: 13px 18px;
+  border-radius: 14px;
+  border: none;
   color: var(--ink);
   cursor: pointer;
+  text-align: center;
+  position: relative;
+  background: linear-gradient(180deg, #3d6b52 0%, #2a4d3a 55%, #1e3a2c 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.22) inset,
+    0 -3px 0 rgba(0, 0, 0, 0.28) inset,
+    0 8px 0 #12261b,
+    0 12px 18px rgba(0, 0, 0, 0.35);
+  transform: translateY(0);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 .btn:hover {
-  background: rgba(255, 255, 255, 0.14);
+  filter: brightness(1.06);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.22) inset,
+    0 3px 0 #12261b,
+    0 6px 10px rgba(0, 0, 0, 0.3);
 }
 .btn.primary {
-  background: var(--primary);
-  border-color: transparent;
+  background: linear-gradient(180deg, #4adf95 0%, #2bb673 48%, #1f8f59 100%);
   color: #062214;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 -3px 0 rgba(0, 0, 0, 0.18) inset,
+    0 8px 0 #146b42,
+    0 12px 18px rgba(0, 0, 0, 0.35);
+}
+.btn.primary:active:not(:disabled) {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.16) inset,
+    0 3px 0 #146b42,
+    0 6px 10px rgba(0, 0, 0, 0.28);
 }
 .btn.accent {
-  background: var(--accent);
-  border-color: transparent;
+  background: linear-gradient(180deg, #f3d06a 0%, #e8b84a 48%, #c99428 100%);
   color: #2a1c00;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 -3px 0 rgba(0, 0, 0, 0.16) inset,
+    0 8px 0 #8a6a18,
+    0 12px 18px rgba(0, 0, 0, 0.35);
+}
+.btn.accent:active:not(:disabled) {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.3) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.14) inset,
+    0 3px 0 #8a6a18,
+    0 6px 10px rgba(0, 0, 0, 0.28);
 }
 .btn.ghost {
-  background: transparent;
+  background: linear-gradient(180deg, #4a6f5c 0%, #345244 55%, #263d33 100%);
+  color: #eef7f1;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 -3px 0 rgba(0, 0, 0, 0.28) inset,
+    0 8px 0 #152820,
+    0 12px 18px rgba(0, 0, 0, 0.35);
+}
+.btn.ghost:active:not(:disabled) {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.22) inset,
+    0 3px 0 #152820,
+    0 6px 10px rgba(0, 0, 0, 0.28);
 }
 .btn.danger {
-  background: color-mix(in srgb, var(--danger) 22%, transparent);
-  border-color: color-mix(in srgb, var(--danger) 55%, transparent);
-  color: #ffd5d5;
+  background: linear-gradient(180deg, #f07878 0%, #e85d5d 48%, #c94444 100%);
+  color: #2a0a0a;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 -3px 0 rgba(0, 0, 0, 0.18) inset,
+    0 8px 0 #8a2a2a,
+    0 12px 18px rgba(0, 0, 0, 0.35);
 }
 .btn.danger:hover {
-  background: color-mix(in srgb, var(--danger) 38%, transparent);
+  filter: brightness(1.05);
+}
+.btn.danger:active:not(:disabled) {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.22) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.16) inset,
+    0 3px 0 #8a2a2a,
+    0 6px 10px rgba(0, 0, 0, 0.28);
 }
 .btn.small {
-  align-self: flex-start;
-  padding: 8px 12px;
+  align-self: center;
+  padding: 9px 14px;
   font-size: 0.85rem;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.25) inset,
+    0 5px 0 #12261b,
+    0 8px 12px rgba(0, 0, 0, 0.3);
+}
+.btn.small:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.2) inset,
+    0 2px 0 #12261b,
+    0 4px 8px rgba(0, 0, 0, 0.28);
+}
+.btn.small.primary {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.3) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.16) inset,
+    0 5px 0 #146b42,
+    0 8px 12px rgba(0, 0, 0, 0.3);
 }
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+  filter: grayscale(0.2);
+  transform: none;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 4px 0 #1a2e22,
+    0 6px 10px rgba(0, 0, 0, 0.2);
 }
 
 .forms,
@@ -656,5 +787,19 @@ select:focus {
   }
   .actions:not(.row) {
     max-width: 360px;
+  }
+  .screen > * {
+    width: min(100%, 460px);
+  }
+  .screen > .scoreboard,
+  .screen > #game-container,
+  .screen > .bracket,
+  .screen > .list,
+  .screen > .lobby-color,
+  .screen > #room-profile,
+  .screen > #tourney-color-wrap,
+  .screen > .match-end,
+  .screen > .match-playing-actions {
+    width: min(100%, 640px);
   }
 }
