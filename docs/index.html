@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Game Stang — Pontos e Caixas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="./assets/index-D0i-v_9_.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DybuOU9R.css">
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">Game Stang</div>
+        <div id="conn" class="conn offline">conectando…</div>
+      </header>
+
+      <main id="screens">
+        <!-- MENU -->
+        <section id="screen-menu" class="screen active">
+          <h1>Pontos e Caixas</h1>
+          <p class="lead">Jogue com amigos à distância e organize campeonatos.</p>
+          <label class="field">
+            Seu apelido
+            <input id="nickname" type="text" maxlength="20" placeholder="Ex: Ana" />
+          </label>
+          <div class="actions">
+            <button id="btn-create-room" class="btn primary">Criar partida 1v1</button>
+            <button id="btn-join-room" class="btn">Entrar com código</button>
+            <button id="btn-create-tourney" class="btn accent">Criar campeonato</button>
+            <button id="btn-join-tourney" class="btn">Entrar no campeonato</button>
+          </div>
+          <div id="menu-forms" class="forms hidden">
+            <div id="form-create-room" class="form hidden">
+              <select id="room-boxes">
+                <option value="4">Grade 4×4</option>
+                <option value="5" selected>Grade 5×5</option>
+                <option value="6">Grade 6×6</option>
+              </select>
+              <button id="confirm-create-room" class="btn primary">Criar sala</button>
+            </div>
+            <div id="form-join-room" class="form hidden">
+              <input id="join-room-code" type="text" maxlength="6" placeholder="Código da sala" />
+              <button id="confirm-join-room" class="btn primary">Entrar</button>
+            </div>
+            <div id="form-create-tourney" class="form hidden">
+              <input id="tourney-name" type="text" maxlength="40" placeholder="Nome do campeonato" />
+              <select id="tourney-size">
+                <option value="2">2 jogadores</option>
+                <option value="3">3 jogadores</option>
+                <option value="4" selected>4 jogadores</option>
+                <option value="5">5 jogadores</option>
+              </select>
+              <select id="tourney-boxes">
+                <option value="4">Grade 4×4</option>
+                <option value="5" selected>Grade 5×5</option>
+                <option value="6">Grade 6×6</option>
+              </select>
+              <button id="confirm-create-tourney" class="btn accent">Criar</button>
+            </div>
+            <div id="form-join-tourney" class="form hidden">
+              <input id="join-tourney-code" type="text" maxlength="6" placeholder="Código do campeonato" />
+              <button id="confirm-join-tourney" class="btn primary">Entrar</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ROOM LOBBY -->
+        <section id="screen-room" class="screen">
+          <h2>Sala <span id="room-code" class="code"></span></h2>
+          <button id="copy-room-link" class="btn small">Copiar link</button>
+          <ul id="room-players" class="list"></ul>
+          <div class="field lobby-color">
+            <span>Escolha sua cor na sala</span>
+            <div id="room-color-picker" class="color-picker"></div>
+            <p id="room-color-hint" class="hint">Cores já usadas ficam bloqueadas.</p>
+          </div>
+          <p id="room-hint" class="hint"></p>
+          <div class="actions row">
+            <button id="btn-start-room" class="btn primary">Iniciar</button>
+            <button id="btn-leave-room" class="btn ghost">Sair</button>
+          </div>
+        </section>
+
+        <!-- TOURNAMENT LOBBY / BRACKET -->
+        <section id="screen-tourney" class="screen">
+          <h2 id="tourney-title">Campeonato</h2>
+          <p>Código: <span id="tourney-code" class="code"></span></p>
+          <button id="copy-tourney-link" class="btn small">Copiar link</button>
+          <ul id="tourney-players" class="list"></ul>
+          <div class="field lobby-color">
+            <span>Escolha sua cor no campeonato</span>
+            <div id="tourney-color-picker" class="color-picker"></div>
+            <p class="hint">Cores já usadas ficam bloqueadas.</p>
+          </div>
+          <div id="bracket" class="bracket"></div>
+          <p id="tourney-hint" class="hint"></p>
+          <div class="actions row">
+            <button id="btn-start-tourney" class="btn accent">Iniciar campeonato</button>
+            <button id="btn-leave-tourney" class="btn ghost">Sair</button>
+          </div>
+        </section>
+
+        <!-- MATCH -->
+        <section id="screen-match" class="screen">
+          <div class="scoreboard">
+            <div id="score-p0" class="score">—</div>
+            <div id="turn-label" class="turn">…</div>
+            <div id="score-p1" class="score">—</div>
+          </div>
+          <div id="game-container"></div>
+          <div id="match-end" class="match-end hidden">
+            <p id="match-end-text"></p>
+            <div class="actions row">
+              <button id="btn-rematch" class="btn primary">Revancha</button>
+              <button id="btn-back-bracket" class="btn accent hidden">Ver chave</button>
+              <button id="btn-leave-match" class="btn ghost">Sair</button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <div id="toast" class="toast hidden"></div>
+    </div>
+    <script src="./config.js"></script>
+  </body>
+</html>

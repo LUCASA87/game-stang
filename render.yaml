@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: game-stang-server
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npx tsx server/index.ts
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

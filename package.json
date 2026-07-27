@@ -1,0 +1,26 @@
+{
+  "name": "game-stang",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"npm:server\" \"npm:client\"",
+    "client": "vite",
+    "server": "tsx watch server/index.ts",
+    "build": "tsc --noEmit && vite build && node scripts/pages-postbuild.mjs",
+    "preview": "vite preview",
+    "start": "tsx server/index.ts"
+  },
+  "dependencies": {
+    "phaser": "^3.80.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}
