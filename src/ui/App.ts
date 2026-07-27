@@ -92,6 +92,9 @@ export class App {
 
     this.net.on((msg) => {
       if (msg.type !== 'helloOk') return;
+      $('conn').textContent = 'online';
+      $('conn').classList.add('online');
+      $('conn').classList.remove('offline');
       const p = qs();
       const room = p.get('room');
       const tourney = p.get('tournament');
@@ -110,39 +113,53 @@ export class App {
 
     $('btn-create-room').onclick = () => this.toggleForm('form-create-room');
     $('confirm-create-room').onclick = () => {
-      const boxes = Number(($('room-boxes') as HTMLSelectElement).value);
-      this.net.send({ type: 'createRoom', nickname: nickname(), boxes });
+      void this.runOnline(() => {
+        const boxes = Number(($('room-boxes') as HTMLSelectElement).value);
+        this.net.send({ type: 'createRoom', nickname: nickname(), boxes });
+      });
     };
 
     $('btn-join-room').onclick = () => this.toggleForm('form-join-room');
     $('confirm-join-room').onclick = () => {
-      const code = ($('join-room-code') as HTMLInputElement).value;
-      this.net.send({ type: 'joinRoom', code, nickname: nickname() });
+      void this.runOnline(() => {
+        const code = ($('join-room-code') as HTMLInputElement).value;
+        this.net.send({ type: 'joinRoom', code, nickname: nickname() });
+      });
     };
 
     $('btn-create-tourney').onclick = () => this.toggleForm('form-create-tourney');
     $('confirm-create-tourney').onclick = () => {
-      const name = ($('tourney-name') as HTMLInputElement).value || 'Campeonato';
-      const size = Number(($('tourney-size') as HTMLSelectElement).value) as TournamentSize;
-      const boxes = Number(($('tourney-boxes') as HTMLSelectElement).value);
-      this.net.send({ type: 'createTournament', nickname: nickname(), name, size, boxes });
+      void this.runOnline(() => {
+        const name = ($('tourney-name') as HTMLInputElement).value || 'Campeonato';
+        const size = Number(($('tourney-size') as HTMLSelectElement).value) as TournamentSize;
+        const boxes = Number(($('tourney-boxes') as HTMLSelectElement).value);
+        this.net.send({ type: 'createTournament', nickname: nickname(), name, size, boxes });
+      });
     };
 
     $('btn-join-tourney').onclick = () => this.toggleForm('form-join-tourney');
     $('confirm-join-tourney').onclick = () => {
-      const code = ($('join-tourney-code') as HTMLInputElement).value;
-      this.net.send({ type: 'joinTournament', code, nickname: nickname() });
+      void this.runOnline(() => {
+        const code = ($('join-tourney-code') as HTMLInputElement).value;
+        this.net.send({ type: 'joinTournament', code, nickname: nickname() });
+      });
     };
 
-    $('btn-start-room').onclick = () => this.net.send({ type: 'startRoom' });
+    $('btn-start-room').onclick = () => {
+      void this.runOnline(() => this.net.send({ type: 'startRoom' }));
+    };
     $('btn-leave-room').onclick = () => this.leaveAll();
     $('copy-room-link').onclick = () => this.copyLink('room');
 
-    $('btn-start-tourney').onclick = () => this.net.send({ type: 'startTournament' });
+    $('btn-start-tourney').onclick = () => {
+      void this.runOnline(() => this.net.send({ type: 'startTournament' }));
+    };
     $('btn-leave-tourney').onclick = () => this.leaveAll();
     $('copy-tourney-link').onclick = () => this.copyLink('tournament');
 
-    $('btn-rematch').onclick = () => this.net.send({ type: 'rematch' });
+    $('btn-rematch').onclick = () => {
+      void this.runOnline(() => this.net.send({ type: 'rematch' }));
+    };
     $('btn-leave-match').onclick = () => this.leaveAll();
     $('btn-back-bracket').onclick = () => {
       if (this.tournament) {
@@ -150,6 +167,31 @@ export class App {
         showScreen('screen-tourney');
       }
     };
+  }
+
+  /** Garante servidor online antes de criar/entrar. */
+  private async runOnline(action: () => void): Promise<void> {
+    if (this.net.missingServerConfig) {
+      $('conn').textContent = 'configure o servidor';
+      toast('No GitHub Pages precisa do servidor Render em config.js');
+      return;
+    }
+
+    $('conn').textContent = 'conectando…';
+    $('conn').classList.add('offline');
+    $('conn').classList.remove('online');
+
+    const ok = await this.net.whenReady(10000);
+    if (!ok) {
+      $('conn').textContent = 'sem servidor';
+      toast('Servidor offline. No PC rode: npm run dev');
+      return;
+    }
+
+    $('conn').textContent = 'online';
+    $('conn').classList.add('online');
+    $('conn').classList.remove('offline');
+    action();
   }
 
   /** Cores já usadas por outros jogadores do lobby */
@@ -184,7 +226,7 @@ export class App {
       btn.disabled = isTaken || !inLobby;
       btn.onclick = () => {
         if (isTaken) return;
-        this.net.send({ type: 'setColor', color: c });
+        void this.runOnline(() => this.net.send({ type: 'setColor', color: c }));
       };
       box.appendChild(btn);
     }
