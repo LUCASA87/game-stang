@@ -156,10 +156,15 @@
           <h2>Sala <span id="room-code" class="code"></span></h2>
           <button type="button" id="copy-room-link" class="btn small">Copiar link</button>
           <ul id="room-players" class="list"></ul>
-          <div class="field lobby-color">
-            <span>Escolha sua cor na sala</span>
+          <div class="field lobby-color" id="room-profile">
+            <label class="field">
+              Seu nome na sala
+              <input id="room-nickname" type="text" maxlength="20" placeholder="Ex: Ana" />
+            </label>
+            <button type="button" id="btn-save-room-name" class="btn small primary">Salvar nome</button>
+            <span>Escolha sua cor</span>
             <div id="room-color-picker" class="color-picker"></div>
-            <p class="hint">Cores já usadas ficam bloqueadas.</p>
+            <p class="hint">Nome e cor são obrigatórios. Cores já usadas ficam bloqueadas.</p>
           </div>
           <p id="room-hint" class="hint"></p>
           <div class="actions row">
@@ -174,9 +179,14 @@
           <button type="button" id="copy-tourney-link" class="btn small">Copiar link</button>
           <ul id="tourney-players" class="list"></ul>
           <div id="tourney-color-wrap" class="field lobby-color">
-            <span>Escolha sua cor no campeonato</span>
+            <label class="field">
+              Seu nome no campeonato
+              <input id="tourney-nickname" type="text" maxlength="20" placeholder="Ex: Ana" />
+            </label>
+            <button type="button" id="btn-save-tourney-name" class="btn small primary">Salvar nome</button>
+            <span>Escolha sua cor</span>
             <div id="tourney-color-picker" class="color-picker"></div>
-            <p class="hint">Cores já usadas ficam bloqueadas.</p>
+            <p class="hint">Nome e cor são obrigatórios. Cores já usadas ficam bloqueadas.</p>
           </div>
           <div id="bracket" class="bracket"></div>
           <p id="tourney-hint" class="hint"></p>
@@ -193,6 +203,9 @@
             <div id="score-p1" class="score">—</div>
           </div>
           <div id="game-container"></div>
+          <div class="actions row match-playing-actions" id="match-playing-actions">
+            <button type="button" id="btn-abandon" class="btn danger">Abandonar partida</button>
+          </div>
           <div id="match-end" class="match-end" hidden>
             <p id="match-end-text"></p>
             <div class="actions row">

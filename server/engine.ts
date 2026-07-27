@@ -1,4 +1,11 @@
-import type { EdgeId, EdgeKind, MatchPublic, MatchScores, PlayerPublic } from '../shared/protocol.js';
+import type {
+  EdgeId,
+  EdgeKind,
+  MatchPublic,
+  MatchScores,
+  PlayerColor,
+  PlayerPublic,
+} from '../shared/protocol.js';
 
 export function parseEdge(edge: EdgeId): { kind: EdgeKind; r: number; c: number } | null {
   const m = /^(h|v):(\d+):(\d+)$/.exec(edge);
@@ -113,6 +120,8 @@ export interface MatchState {
   winnerId: string | null;
   turnDeadline: number | null;
   playerIds: [string | null, string | null];
+  /** Cores congeladas no início da partida (não mudam se o lobby zerar color) */
+  playerColors: Record<string, PlayerColor>;
   tournamentId?: string;
   bracketMatchId?: string;
 }
@@ -124,6 +133,7 @@ export function createMatch(
   p0: string,
   p1: string,
   meta?: { tournamentId?: string; bracketMatchId?: string },
+  playerColors: Record<string, PlayerColor> = {},
 ): MatchState {
   return {
     id: `m${++matchSeq}`,
@@ -136,6 +146,7 @@ export function createMatch(
     winnerId: null,
     turnDeadline: null,
     playerIds: [p0, p1],
+    playerColors: { ...playerColors },
     tournamentId: meta?.tournamentId,
     bracketMatchId: meta?.bracketMatchId,
   };
@@ -191,6 +202,18 @@ export function forceTimeoutMove(match: MatchState): EdgeId | null {
   return free[Math.floor(Math.random() * free.length)];
 }
 
+function playerForMatch(
+  id: string | null,
+  match: MatchState,
+  players: Map<string, PlayerPublic>,
+): PlayerPublic | null {
+  if (!id) return null;
+  const p = players.get(id);
+  if (!p) return null;
+  const frozen = match.playerColors[id];
+  return frozen ? { ...p, color: frozen } : { ...p };
+}
+
 export function toMatchPublic(
   match: MatchState,
   players: Map<string, PlayerPublic>,
@@ -206,8 +229,8 @@ export function toMatchPublic(
     winnerId: match.winnerId,
     turnDeadline: match.turnDeadline,
     players: [
-      match.playerIds[0] ? players.get(match.playerIds[0]) ?? null : null,
-      match.playerIds[1] ? players.get(match.playerIds[1]) ?? null : null,
+      playerForMatch(match.playerIds[0], match, players),
+      playerForMatch(match.playerIds[1], match, players),
     ],
     tournamentId: match.tournamentId,
     bracketMatchId: match.bracketMatchId,

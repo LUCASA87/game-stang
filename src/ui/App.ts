@@ -95,15 +95,27 @@ export class App {
       $('conn').textContent = 'online';
       $('conn').classList.add('online');
       $('conn').classList.remove('offline');
-      const p = qs();
-      const room = p.get('room');
-      const tourney = p.get('tournament');
-      if (room && !this.room) {
-        this.net.send({ type: 'joinRoom', code: room, nickname: nickname() });
-      } else if (tourney && !this.tournament) {
-        this.net.send({ type: 'joinTournament', code: tourney, nickname: nickname() });
-      }
+      // Espera roomState/tournamentState do hello antes de tentar join pela URL
+      // (senão o joinRoom zera a cor no meio da partida)
+      window.setTimeout(() => this.tryJoinFromUrl(), 150);
     });
+  }
+
+  private tryJoinFromUrl(): void {
+    const p = qs();
+    const room = p.get('room');
+    const tourney = p.get('tournament');
+    if (room && !this.room) {
+      void this.runOnline(() => {
+        if (this.room) return;
+        this.net.send({ type: 'joinRoom', code: room, nickname: nickname() });
+      });
+    } else if (tourney && !this.tournament) {
+      void this.runOnline(() => {
+        if (this.tournament) return;
+        this.net.send({ type: 'joinTournament', code: tourney, nickname: nickname() });
+      });
+    }
   }
 
   private bindUi(): void {
@@ -113,6 +125,7 @@ export class App {
 
     $('btn-create-room').onclick = () => this.toggleForm('form-create-room');
     $('confirm-create-room').onclick = () => {
+      if (!this.requireMenuName()) return;
       void this.runOnline(() => {
         const boxes = Number(($('room-boxes') as HTMLSelectElement).value);
         this.net.send({ type: 'createRoom', nickname: nickname(), boxes });
@@ -121,6 +134,7 @@ export class App {
 
     $('btn-join-room').onclick = () => this.toggleForm('form-join-room');
     $('confirm-join-room').onclick = () => {
+      if (!this.requireMenuName()) return;
       void this.runOnline(() => {
         const code = ($('join-room-code') as HTMLInputElement).value;
         this.net.send({ type: 'joinRoom', code, nickname: nickname() });
@@ -129,6 +143,7 @@ export class App {
 
     $('btn-create-tourney').onclick = () => this.toggleForm('form-create-tourney');
     $('confirm-create-tourney').onclick = () => {
+      if (!this.requireMenuName()) return;
       void this.runOnline(() => {
         const name = ($('tourney-name') as HTMLInputElement).value || 'Campeonato';
         const size = Number(($('tourney-size') as HTMLSelectElement).value) as TournamentSize;
@@ -139,6 +154,7 @@ export class App {
 
     $('btn-join-tourney').onclick = () => this.toggleForm('form-join-tourney');
     $('confirm-join-tourney').onclick = () => {
+      if (!this.requireMenuName()) return;
       void this.runOnline(() => {
         const code = ($('join-tourney-code') as HTMLInputElement).value;
         this.net.send({ type: 'joinTournament', code, nickname: nickname() });
@@ -150,23 +166,38 @@ export class App {
     };
     $('btn-leave-room').onclick = () => this.leaveAll();
     $('copy-room-link').onclick = () => this.copyLink('room');
+    $('btn-save-room-name').onclick = () => this.saveLobbyName('room-nickname');
 
     $('btn-start-tourney').onclick = () => {
       void this.runOnline(() => this.net.send({ type: 'startTournament' }));
     };
     $('btn-leave-tourney').onclick = () => this.leaveAll();
     $('copy-tourney-link').onclick = () => this.copyLink('tournament');
+    $('btn-save-tourney-name').onclick = () => this.saveLobbyName('tourney-nickname');
 
     $('btn-rematch').onclick = () => {
       void this.runOnline(() => this.net.send({ type: 'rematch' }));
     };
     $('btn-leave-match').onclick = () => this.leaveAll();
+    $('btn-abandon').onclick = () => this.abandonMatch();
     $('btn-back-bracket').onclick = () => {
       if (this.tournament) {
         this.renderTournament();
         showScreen('screen-tourney');
       }
     };
+  }
+
+  private abandonMatch(): void {
+    if (!this.match || this.match.status !== 'playing') {
+      this.leaveAll();
+      return;
+    }
+    const ok = window.confirm(
+      'Abandonar a partida? O adversário vence e você sai da sala.',
+    );
+    if (!ok) return;
+    this.leaveAll();
   }
 
   /** Garante servidor online antes de criar/entrar. */
@@ -192,6 +223,32 @@ export class App {
     $('conn').classList.add('online');
     $('conn').classList.remove('offline');
     action();
+  }
+
+  private saveLobbyName(inputId: string): void {
+    const nick = ($(inputId) as HTMLInputElement).value.trim();
+    if (nick.length < 2) {
+      toast('Digite seu nome (mín. 2 letras)');
+      return;
+    }
+    localStorage.setItem('game_stang_nick', nick);
+    ($('nickname') as HTMLInputElement).value = nick;
+    void this.runOnline(() => this.net.send({ type: 'setNickname', nickname: nick }));
+  }
+
+  private hasValidName(p: { nickname: string } | undefined): boolean {
+    return !!p?.nickname?.trim() && p.nickname.trim().length >= 2;
+  }
+
+  private requireMenuName(): boolean {
+    const nick = nickname();
+    if (nick.length < 2) {
+      toast('Digite seu nome no menu (mín. 2 letras)');
+      ($('nickname') as HTMLInputElement).focus();
+      return false;
+    }
+    localStorage.setItem('game_stang_nick', nick);
+    return true;
   }
 
   /** Cores já usadas por outros jogadores do lobby */
@@ -326,29 +383,36 @@ export class App {
       const host = p.id === this.room.hostId ? ' · host' : '';
       const you = p.id === this.net.playerId ? ' (você)' : '';
       const hex = p.color ? PLAYER_COLOR_HEX[p.color] : '#666';
+      const name = this.hasValidName(p) ? p.nickname : 'sem nome';
       const colorLabel = p.color ? PLAYER_COLOR_LABEL[p.color] : 'sem cor';
-      li.innerHTML = `<span><i class="color-dot" style="background:${hex}"></i>${p.nickname}${you}${host}</span><span>${colorLabel}</span>`;
+      li.innerHTML = `<span><i class="color-dot" style="background:${hex}"></i>${name}${you}${host}</span><span>${colorLabel}</span>`;
       ul.appendChild(li);
     }
 
     const inLobby = this.room.status === 'lobby';
+    $('room-profile').hidden = !inLobby;
     this.renderLobbyColorPicker('room-color-picker', this.room.players, inLobby);
 
     const me = this.room.players.find((p) => p.id === this.net.playerId);
-    const allColored = this.room.players.every((p) => p.color);
-    const isHost = this.room.hostId === this.net.playerId;
-    ($('btn-start-room') as HTMLButtonElement).disabled = !(
-      isHost &&
-      this.room.players.length === 2 &&
-      allColored
-    );
+    const nickInput = $('room-nickname') as HTMLInputElement;
+    if (inLobby && document.activeElement !== nickInput) {
+      nickInput.value = this.hasValidName(me) ? me!.nickname : nickname() || '';
+    }
 
-    if (!me?.color) {
+    const allReady =
+      this.room.players.every((p) => this.hasValidName(p) && p.color) &&
+      this.room.players.length === 2;
+    const isHost = this.room.hostId === this.net.playerId;
+    ($('btn-start-room') as HTMLButtonElement).disabled = !(isHost && allReady);
+
+    if (!this.hasValidName(me)) {
+      $('room-hint').textContent = 'Digite seu nome e clique em Salvar nome.';
+    } else if (!me?.color) {
       $('room-hint').textContent = 'Escolha uma cor livre para continuar.';
     } else if (this.room.players.length < 2) {
       $('room-hint').textContent = 'Compartilhe o código/link e aguarde o amigo.';
-    } else if (!allColored) {
-      $('room-hint').textContent = 'Aguardando todos escolherem a cor…';
+    } else if (!allReady) {
+      $('room-hint').textContent = 'Aguardando todos definirem nome e cor…';
     } else if (isHost) {
       $('room-hint').textContent = 'Pronto! Clique em Iniciar.';
     } else {
@@ -370,31 +434,40 @@ export class App {
       const out = t.eliminatedIds?.includes(p.id) ? 'eliminado' : t.activeIds?.includes(p.id) || t.status === 'lobby' ? (p.connected ? 'online' : 'ausente') : '';
       const champ = p.id === t.championId ? ' · campeão' : '';
       const hex = p.color ? PLAYER_COLOR_HEX[p.color] : '#666';
+      const name = this.hasValidName(p) ? p.nickname : 'sem nome';
       const colorLabel = p.color ? PLAYER_COLOR_LABEL[p.color] : 'sem cor';
-      li.innerHTML = `<span><i class="color-dot" style="background:${hex}"></i>${p.nickname}${you}${host}${champ}</span><span>${out || colorLabel}</span>`;
+      li.innerHTML = `<span><i class="color-dot" style="background:${hex}"></i>${name}${you}${host}${champ}</span><span>${out || colorLabel}</span>`;
       if (t.eliminatedIds?.includes(p.id)) li.style.opacity = '0.55';
       ul.appendChild(li);
     }
 
     const inLobby = t.status === 'lobby';
+    $('tourney-color-wrap').hidden = !inLobby;
     this.renderLobbyColorPicker('tourney-color-picker', t.players, inLobby);
 
-    const allColored = t.players.every((p) => p.color);
+    const me = t.players.find((p) => p.id === this.net.playerId);
+    const nickInput = $('tourney-nickname') as HTMLInputElement;
+    if (inLobby && document.activeElement !== nickInput) {
+      nickInput.value = this.hasValidName(me) ? me!.nickname : nickname() || '';
+    }
+
+    const allReady = t.players.every((p) => this.hasValidName(p) && p.color);
     const isHost = t.hostId === this.net.playerId;
     ($('btn-start-tourney') as HTMLButtonElement).disabled = !(
       isHost &&
-      t.status === 'lobby' &&
+      inLobby &&
       t.players.length === t.size &&
-      allColored
+      allReady
     );
-    ($('btn-start-tourney') as HTMLButtonElement).hidden = t.status !== 'lobby';
+    ($('btn-start-tourney') as HTMLButtonElement).hidden = !inLobby;
 
     if (t.status === 'lobby') {
-      const me = t.players.find((p) => p.id === this.net.playerId);
-      if (!me?.color) {
+      if (!this.hasValidName(me)) {
+        $('tourney-hint').textContent = `Digite seu nome e Salvar · ${t.players.length}/${t.size}`;
+      } else if (!me?.color) {
         $('tourney-hint').textContent = `Escolha uma cor livre · ${t.players.length}/${t.size}`;
-      } else if (!allColored) {
-        $('tourney-hint').textContent = `Aguardando cores · ${t.players.length}/${t.size}`;
+      } else if (!allReady) {
+        $('tourney-hint').textContent = `Aguardando nome e cor · ${t.players.length}/${t.size}`;
       } else {
         $('tourney-hint').textContent = `${t.players.length}/${t.size} prontos · duplas 1v1, perdedor eliminado`;
       }
@@ -467,6 +540,7 @@ export class App {
 
     const ended = this.match.status === 'finished';
     $('match-end').hidden = !ended;
+    $('match-playing-actions').hidden = ended;
     if (ended) {
       const w = this.match.winnerId;
       const me = this.net.playerId;
@@ -494,26 +568,37 @@ export class App {
     const s1 = p1 ? this.match.scores[p1.id] ?? 0 : 0;
     const score0 = $('score-p0');
     const score1 = $('score-p1');
-    score0.className = 'score';
-    score1.className = 'score';
+    const board = score0.parentElement;
+    const currentId = this.match.currentPlayerId;
+    const current = this.match.players.find((p) => p?.id === currentId) ?? null;
+    const turnColor = current?.color ? PLAYER_COLOR_HEX[current.color] : 'var(--accent)';
+
+    score0.className = 'score' + (p0?.id === currentId && this.match.status === 'playing' ? ' active' : '');
+    score1.className = 'score' + (p1?.id === currentId && this.match.status === 'playing' ? ' active' : '');
     const c0 = p0?.color ? PLAYER_COLOR_HEX[p0.color] : '#4fc3f7';
     const c1 = p1?.color ? PLAYER_COLOR_HEX[p1.color] : '#ff8a65';
     score0.style.borderLeft = `4px solid ${c0}`;
     score1.style.borderLeft = `4px solid ${c1}`;
+    score0.style.setProperty('--turn-color', c0);
+    score1.style.setProperty('--turn-color', c1);
     score0.textContent = `${p0?.nickname ?? '—'} · ${s0}`;
     score1.textContent = `${s1} · ${p1?.nickname ?? '—'}`;
     score1.style.textAlign = 'right';
+    if (board) board.style.setProperty('--turn-color', turnColor);
 
     const turn = $('turn-label');
     if (this.match.status === 'finished') {
       turn.textContent = 'Fim';
-    } else if (this.match.currentPlayerId === this.net.playerId) {
+      turn.style.color = '';
+    } else {
+      const name = current?.nickname?.trim() || 'Jogador';
       const left = this.match.turnDeadline
         ? Math.max(0, Math.ceil((this.match.turnDeadline - Date.now()) / 1000))
         : 0;
-      turn.textContent = `Sua vez · ${left}s`;
-    } else {
-      turn.textContent = 'Vez do amigo';
+      const mine = currentId === this.net.playerId;
+      turn.textContent = mine ? `Sua vez · ${name} · ${left}s` : `Vez de ${name} · ${left}s`;
+      turn.style.whiteSpace = '';
+      turn.style.color = turnColor;
     }
   }
 

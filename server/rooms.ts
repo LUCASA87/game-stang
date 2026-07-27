@@ -1,4 +1,4 @@
-import type { EdgeId, PlayerPublic, RoomPublic } from '../shared/protocol.js';
+import type { EdgeId, PlayerColor, PlayerPublic, RoomPublic } from '../shared/protocol.js';
 import { DEFAULT_BOXES, TURN_TIMEOUT_MS } from '../shared/protocol.js';
 import { normalizeCode, randomCode } from './codes.js';
 import {
@@ -27,6 +27,15 @@ export class RoomManager {
     private onMatchEnd?: (room: Room, match: MatchState) => void,
   ) {}
 
+  private colorsOf(...ids: string[]): Record<string, PlayerColor> {
+    const out: Record<string, PlayerColor> = {};
+    for (const id of ids) {
+      const c = this.players.get(id)?.color;
+      if (c) out[id] = c;
+    }
+    return out;
+  }
+
   create(hostId: string, boxes = DEFAULT_BOXES): Room {
     this.leave(hostId);
     let code = randomCode();
@@ -48,8 +57,8 @@ export class RoomManager {
     const code = normalizeCode(codeRaw);
     const room = this.rooms.get(code);
     if (!room) throw new Error('Sala não encontrada');
-    if (room.status !== 'lobby') throw new Error('Partida já começou');
     if (room.playerIds.includes(playerId)) return room;
+    if (room.status !== 'lobby') throw new Error('Partida já começou');
     if (room.playerIds.length >= 2) throw new Error('Sala cheia');
     this.leave(playerId);
     room.playerIds.push(playerId);
@@ -77,7 +86,7 @@ export class RoomManager {
 
     let code = randomCode();
     while (this.rooms.has(code)) code = randomCode();
-    const match = createMatch(boxes, p0, p1, meta);
+    const match = createMatch(boxes, p0, p1, meta, this.colorsOf(p0, p1));
     match.turnDeadline = Date.now() + TURN_TIMEOUT_MS;
     const room: Room = {
       code,
@@ -100,7 +109,7 @@ export class RoomManager {
     if (room.playerIds.length < 2) throw new Error('Falta um adversário');
     if (room.status === 'playing') return room;
     const [a, b] = room.playerIds;
-    room.match = createMatch(room.boxes, a, b);
+    room.match = createMatch(room.boxes, a, b, undefined, this.colorsOf(a, b));
     room.match.turnDeadline = Date.now() + TURN_TIMEOUT_MS;
     room.status = 'playing';
     return room;
@@ -112,7 +121,7 @@ export class RoomManager {
     if (room.playerIds.length < 2) throw new Error('Falta adversário');
     if (room.match?.tournamentId) throw new Error('Revancha indisponível no torneio');
     const [a, b] = room.playerIds;
-    room.match = createMatch(room.boxes, a, b);
+    room.match = createMatch(room.boxes, a, b, undefined, this.colorsOf(a, b));
     room.match.turnDeadline = Date.now() + TURN_TIMEOUT_MS;
     room.status = 'playing';
     return room;

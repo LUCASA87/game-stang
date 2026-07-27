@@ -123,6 +123,7 @@ export type ClientToServer =
   | { type: 'createRoom'; nickname: string; boxes?: number }
   | { type: 'joinRoom'; code: string; nickname: string }
   | { type: 'setColor'; color: PlayerColor }
+  | { type: 'setNickname'; nickname: string }
   | { type: 'startRoom' }
   | { type: 'playMove'; edge: EdgeId }
   | { type: 'rematch' }

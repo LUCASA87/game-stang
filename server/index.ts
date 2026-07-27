@@ -3,6 +3,7 @@ import { Server, type Socket } from 'socket.io';
 import { randomUUID } from 'crypto';
 import type { ClientToServer, PlayerColor, PlayerPublic, ServerToClient } from '../shared/protocol.js';
 import { isPlayerColor } from '../shared/protocol.js';
+import { normalizeCode } from './codes.js';
 import { RoomManager } from './rooms.js';
 import { TournamentManager } from './tournaments.js';
 
@@ -80,7 +81,7 @@ function ensurePlayer(playerId: string, nickname?: string): PlayerPublic {
   if (!p) {
     p = {
       id: playerId,
-      nickname: nickname?.trim().slice(0, 20) || 'Jogador',
+      nickname: nickname?.trim().slice(0, 20) || '',
       color: null,
       connected: true,
     };
@@ -110,10 +111,13 @@ function peerIdsForColor(playerId: string): string[] {
   return [];
 }
 
-function assertAllHaveColor(playerIds: string[]): void {
+function assertAllReady(playerIds: string[]): void {
   for (const id of playerIds) {
     const p = players.get(id);
-    if (!p?.color) throw new Error('Todos precisam escolher uma cor antes de iniciar');
+    if (!p?.nickname?.trim() || p.nickname.trim().length < 2) {
+      throw new Error('Todos precisam definir o nome antes de iniciar');
+    }
+    if (!p.color) throw new Error('Todos precisam escolher uma cor antes de iniciar');
   }
 }
 
@@ -182,13 +186,20 @@ function handle(socket: Socket, msg: ClientToServer): void {
 
   switch (msg.type) {
     case 'createRoom': {
-      ensurePlayer(playerId, msg.nickname).color = null;
+      const p = ensurePlayer(playerId, msg.nickname);
+      p.color = null;
       const room = rooms.create(playerId, msg.boxes);
       emitRoom(room.code);
       break;
     }
     case 'joinRoom': {
-      ensurePlayer(playerId, msg.nickname).color = null;
+      const p = ensurePlayer(playerId, msg.nickname);
+      const code = normalizeCode(msg.code);
+      const already = rooms.getByPlayer(playerId);
+      // Reentrar na mesma sala (refresh) NÃO pode apagar a cor — senão o tabuleiro vira azul
+      if (!already || already.code !== code) {
+        p.color = null;
+      }
       const room = rooms.join(msg.code, playerId);
       emitRoom(room.code);
       break;
@@ -206,10 +217,21 @@ function handle(socket: Socket, msg: ClientToServer): void {
       if (t) emitTournament(t.code);
       break;
     }
+    case 'setNickname': {
+      const nick = msg.nickname?.trim().slice(0, 20);
+      if (!nick || nick.length < 2) throw new Error('Digite seu nome (mín. 2 letras)');
+      const p = ensurePlayer(playerId);
+      p.nickname = nick;
+      const room = rooms.getByPlayer(playerId);
+      if (room) emitRoom(room.code);
+      const t = tournaments.getByPlayer(playerId);
+      if (t) emitTournament(t.code);
+      break;
+    }
     case 'startRoom': {
       const room = rooms.getByPlayer(playerId);
       if (!room) throw new Error('Você não está em uma sala');
-      assertAllHaveColor(room.playerIds);
+      assertAllReady(room.playerIds);
       rooms.start(playerId);
       emitRoom(room.code);
       break;
@@ -236,13 +258,19 @@ function handle(socket: Socket, msg: ClientToServer): void {
       break;
     }
     case 'createTournament': {
-      ensurePlayer(playerId, msg.nickname).color = null;
+      const p = ensurePlayer(playerId, msg.nickname);
+      p.color = null;
       const t = tournaments.create(playerId, msg.name, msg.size, msg.boxes);
       emitTournament(t.code);
       break;
     }
     case 'joinTournament': {
-      ensurePlayer(playerId, msg.nickname).color = null;
+      const p = ensurePlayer(playerId, msg.nickname);
+      const code = normalizeCode(msg.code);
+      const already = tournaments.getByPlayer(playerId);
+      if (!already || already.code !== code) {
+        p.color = null;
+      }
       const t = tournaments.join(msg.code, playerId);
       emitTournament(t.code);
       break;
@@ -250,7 +278,7 @@ function handle(socket: Socket, msg: ClientToServer): void {
     case 'startTournament': {
       const t = tournaments.getByPlayer(playerId);
       if (!t) throw new Error('Você não está em um campeonato');
-      assertAllHaveColor(t.playerIds);
+      assertAllReady(t.playerIds);
       tournaments.start(playerId);
       emitTournament(t.code);
       for (const bm of t.bracket) {
